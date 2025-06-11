@@ -20,7 +20,7 @@ import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.model.SysUiState
-import com.android.systemui.recents.OverviewProxyService
+import com.android.systemui.recents.LauncherProxyService
 import com.android.systemui.settings.DisplayTracker
 import com.android.systemui.settings.UserTracker
 import com.android.systemui.statusbar.CommandQueue
@@ -44,7 +44,7 @@ constructor(
   assistUtils: AssistUtils,
   commandQueue: CommandQueue,
   phoneStateMonitor: PhoneStateMonitor,
-  overviewProxyService: OverviewProxyService,
+  launcherProxyService: LauncherProxyService,
   sysUiState: Lazy<SysUiState>,
   defaultUiController: DefaultUiController,
   assistLogger: AssistLogger,
@@ -65,7 +65,7 @@ constructor(
     assistUtils,
     commandQueue,
     phoneStateMonitor,
-    overviewProxyService,
+    launcherProxyService,
     sysUiState,
     defaultUiController,
     assistLogger,

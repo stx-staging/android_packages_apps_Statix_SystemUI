@@ -20,6 +20,7 @@ import com.android.systemui.assist.AssistManager;
 import com.android.systemui.battery.BatterySaverModule;
 import com.android.systemui.biometrics.FingerprintInteractiveToAuthProvider;
 import com.android.systemui.clipboardoverlay.dagger.ClipboardOverlayOverrideModule;
+import com.android.systemui.communal.posturing.dagger.NoopPosturingModule;
 import com.android.systemui.controls.controller.ControlsTileResourceConfiguration;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.display.ui.viewmodel.ConnectingDisplayViewModel;
@@ -27,6 +28,8 @@ import com.android.systemui.dock.DockManager;
 import com.android.systemui.dock.DockManagerImpl;
 import com.android.systemui.doze.DozeHost;
 import com.android.systemui.education.dagger.ContextualEducationModule;
+import com.android.systemui.topwindoweffects.dagger.SqueezeEffectRepositoryModule;
+import com.android.systemui.topwindoweffects.dagger.TopLevelWindowEffectsModule;
 import com.android.systemui.emergency.EmergencyGestureModule;
 import com.android.systemui.globalactions.GlobalActionsModule;
 import com.android.systemui.inputdevice.tutorial.KeyboardTouchpadTutorialModule;
@@ -46,12 +49,14 @@ import com.android.systemui.reardisplay.RearDisplayModule;
 import com.android.systemui.recents.Recents;
 import com.android.systemui.recents.RecentsImplementation;
 import com.android.systemui.recents.RecentsModule;
+import com.android.systemui.rotationlock.DeviceStateAutoRotateModule;
 import com.android.systemui.rotationlock.RotationLockModule;
 import com.android.systemui.rotationlock.RotationLockNewModule;
 import com.android.systemui.scene.SceneContainerFrameworkModule;
 import com.android.systemui.screenshot.ReferenceScreenshotModule;
 import com.android.systemui.settings.MultiUserUtilsModule;
 import com.android.systemui.settings.UserTracker;
+import com.android.systemui.settings.brightness.dagger.BrightnessSliderModule;
 import com.android.systemui.shade.NotificationShadeWindowControllerImpl;
 import com.android.systemui.shade.ShadeModule;
 import com.android.systemui.statusbar.CommandQueue;
@@ -70,6 +75,7 @@ import com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragmentS
 import com.android.systemui.statusbar.policy.AospPolicyModule;
 import com.android.systemui.statusbar.policy.DeviceProvisionedController;
 import com.android.systemui.statusbar.policy.DeviceProvisionedControllerImpl;
+import com.android.systemui.statusbar.policy.FlashlightModule;
 import com.android.systemui.statusbar.policy.IndividualSensorPrivacyController;
 import com.android.systemui.statusbar.policy.IndividualSensorPrivacyControllerImpl;
 import com.android.systemui.statusbar.policy.SensorPrivacyController;
@@ -121,12 +127,15 @@ import javax.inject.Named;
             AccessibilityRepositoryModule.class,
             AospPolicyModule.class,
             BatterySaverModule.class,
+            BrightnessSliderModule.class,
             ClipboardOverlayOverrideModule.class,
             CollapsedStatusBarFragmentStartableModule.class,
             ConnectingDisplayViewModel.StartableModule.class,
             ContextualEducationModule.class,
             DefaultBlueprintModule.class,
+            DeviceStateAutoRotateModule.class,
             EmergencyGestureModule.class,
+            FlashlightModule.class,
             GestureModule.class,
             GlobalActionsModule.class,
             HeadsUpModule.class,
@@ -144,12 +153,14 @@ import javax.inject.Named;
             RearDisplayModule.class,
             RecentsModule.class,
             ReferenceNotificationsModule.class,
+            NoopPosturingModule.class,
             ReferenceScreenshotModule.class,
             RotationLockModule.class,
             RotationLockNewModule.class,
             SceneContainerFrameworkModule.class,
             ScreenDecorationsModule.class,
             ShadeModule.class,
+            SqueezeEffectRepositoryModule.class,
             ShortcutHelperModule.class,
             StatixCentralSurfacesModule.class,
             StatixStartCentralSurfacesModule.class,
@@ -160,6 +171,7 @@ import javax.inject.Named;
             SysUICoroutinesModule.class,
             SysUIUnfoldStartableModule.class,
             ToastModule.class,
+            TopLevelWindowEffectsModule.class,
             TouchpadTutorialModule.class,
             UnfoldTransitionModule.Startables.class,
             VolumeModule.class,
