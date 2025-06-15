@@ -30,6 +30,13 @@ android_library {
     ],
 }
 
+java_import {
+    name: "StatixSystemUI-jars",
+    jars: [
+        "src/**/*.jar",
+    ],
+}
+
 android_library {
     name: "StatixSystemUI-core",
     srcs: [
@@ -44,6 +51,7 @@ android_library {
         "elmyra-sysui-shared",
         "lineage_hw_helpers",
         "monet",
+        "StatixSystemUI-jars",
         "StatixSystemUI-res",
         "SystemUI-core",
         "vendor.lineage.powershare-V1-java",

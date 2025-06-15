@@ -5,6 +5,8 @@
 
 package com.statix.android.systemui.dagger;
 
+import android.content.Context;
+
 import com.android.systemui.dagger.GlobalModule;
 import com.android.systemui.dagger.GlobalRootComponent;
 
@@ -15,6 +17,8 @@ import javax.inject.Singleton;
 @Singleton
 @Component(modules = {GlobalModule.class})
 public interface GlobalRootComponentStatix extends GlobalRootComponent {
+
+    public final Context context;
 
     @Component.Builder
     interface Builder extends GlobalRootComponent.Builder {

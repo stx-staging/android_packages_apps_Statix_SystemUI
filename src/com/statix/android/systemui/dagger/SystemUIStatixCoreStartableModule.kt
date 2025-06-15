@@ -16,9 +16,21 @@
 
 package com.statix.android.systemui.dagger
 
+import com.android.systemui.CoreStartable
+
+import com.google.android.systemui.keyguard.AmbientIndicationCoreStartable
+
+import dagger.Binds
 import dagger.Module
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
 
 /** Collection of {@link CoreStartable}s that should be run on AOSP. */
 @Module
 abstract class SystemUIStatixCoreStartableModule {
+    /** Inject into AmbientIndicationCoreStartable. */
+    @Binds
+    @IntoMap
+    @ClassKey(AmbientIndicationCoreStartable::class)
+    abstract fun bindAmbientIndicationCoreStartable(sysui: AmbientIndicationCoreStartable): CoreStartable
 }
