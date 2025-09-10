@@ -8,10 +8,14 @@ package com.statix.android.systemui.dagger;
 import static com.android.systemui.Dependency.ALLOW_NOTIFICATION_LONG_PRESS_NAME;
 import static com.android.systemui.Dependency.LEAK_REPORT_EMAIL_NAME;
 
+import android.app.AlarmManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.hardware.SensorPrivacyManager;
+import android.os.Handler;
 
 import com.android.keyguard.KeyguardViewController;
+import com.android.systemui.CoreStartable;
 import com.android.systemui.Flags;
 import com.android.systemui.ScreenDecorationsModule;
 import com.android.systemui.accessibility.AccessibilityModule;
@@ -25,11 +29,13 @@ import com.android.systemui.clipboardoverlay.dagger.ClipboardOverlayOverrideModu
 import com.android.systemui.communal.posturing.dagger.PosturingModule;
 import com.android.systemui.contextualcursor.ContextualCursorModule;
 import com.android.systemui.controls.controller.ControlsTileResourceConfiguration;
-import com.android.systemui.CoreStartable;
 import com.android.systemui.cursorposition.CursorPositionModule;
 import com.android.systemui.dagger.SysUISingleton;
-import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent;
+import com.android.systemui.dagger.qualifiers.Application;
+import com.android.systemui.dagger.qualifiers.Background;
+import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.display.dagger.ReferenceSysUIDisplaySubcomponent;
+import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent;
 import com.android.systemui.display.data.repository.DisplayPhoneModule;
 import com.android.systemui.display.ui.viewmodel.ConnectingDisplayViewModel;
 import com.android.systemui.dock.DockManager;
@@ -38,6 +44,7 @@ import com.android.systemui.doze.DozeHost;
 import com.android.systemui.dreams.suppression.dagger.NoOpActivityRecognitionModule;
 import com.android.systemui.education.dagger.ContextualEducationModule;
 import com.android.systemui.emergency.EmergencyGestureModule;
+import com.android.systemui.flags.FeatureFlags;
 import com.android.systemui.globalactions.GlobalActionsModule;
 import com.android.systemui.inputdevice.tutorial.KeyboardTouchpadTutorialModule;
 import com.android.systemui.inputmethod.ImeSwitcherMenuModule;
@@ -46,6 +53,7 @@ import com.android.systemui.keyguard.dagger.KeyguardModule;
 import com.android.systemui.keyguard.ui.view.layout.blueprints.KeyguardBlueprintModule;
 import com.android.systemui.keyguard.ui.view.layout.sections.KeyguardSectionsModule;
 import com.android.systemui.lowlight.dagger.ScreenAwareLightModeMonitorModule;
+import com.android.systemui.media.NotificationMediaManager;
 import com.android.systemui.media.dagger.MediaModule;
 import com.android.systemui.media.muteawait.MediaMuteAwaitConnectionCli;
 import com.android.systemui.media.nearby.NearbyMediaDevicesManager;
@@ -53,6 +61,7 @@ import com.android.systemui.minmode.MinModeManager;
 import com.android.systemui.minmode.MinModeManagerImpl;
 import com.android.systemui.navigationbar.NavigationBarControllerModule;
 import com.android.systemui.navigationbar.gestural.GestureModule;
+import com.android.systemui.plugins.BcSmartspaceDataPlugin;
 import com.android.systemui.plugins.qs.QSFactory;
 import com.android.systemui.qs.QSFragmentStartableModule;
 import com.android.systemui.reardisplay.RearDisplayModule;
@@ -68,13 +77,15 @@ import com.android.systemui.settings.MultiUserUtilsModule;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.shade.NotificationShadeWindowControllerImpl;
 import com.android.systemui.shade.ShadeModule;
+import com.android.systemui.smartspace.config.BcSmartspaceConfigProvider;
+import com.android.systemui.smartspace.dagger.SmartspaceModule;
 import com.android.systemui.startable.Dependencies;
 import com.android.systemui.statusbar.CommandQueue;
 import com.android.systemui.statusbar.KeyguardIndicationController;
 import com.android.systemui.statusbar.NotificationLockscreenUserManager;
 import com.android.systemui.statusbar.NotificationLockscreenUserManagerImpl;
 import com.android.systemui.statusbar.NotificationShadeWindowController;
-import com.android.systemui.statusbar.dagger.StartCentralSurfacesModule;
+import com.android.systemui.statusbar.SysuiStatusBarStateController;
 import com.android.systemui.statusbar.notification.dagger.ReferenceNotificationsModule;
 import com.android.systemui.statusbar.notification.headsup.HeadsUpModule;
 import com.android.systemui.statusbar.phone.CentralSurfaces;
@@ -86,9 +97,12 @@ import com.android.systemui.statusbar.policy.DeviceProvisionedController;
 import com.android.systemui.statusbar.policy.DeviceProvisionedControllerImpl;
 import com.android.systemui.statusbar.policy.IndividualSensorPrivacyController;
 import com.android.systemui.statusbar.policy.IndividualSensorPrivacyControllerImpl;
+import com.android.systemui.statusbar.policy.NextAlarmControllerImpl;
 import com.android.systemui.statusbar.policy.SensorPrivacyController;
 import com.android.systemui.statusbar.policy.SensorPrivacyControllerImpl;
+import com.android.systemui.statusbar.policy.ZenModeController;
 import com.android.systemui.statusbar.policy.dagger.SmartRepliesInflationModule;
+import com.android.systemui.statusbar.policy.domain.interactor.ZenModeInteractor;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
 import com.android.systemui.theme.ThemeOverlayController;
 import com.android.systemui.toast.ToastModule;
@@ -96,10 +110,18 @@ import com.android.systemui.topwindoweffects.dagger.TopLevelWindowEffectsModule;
 import com.android.systemui.touchpad.tutorial.TouchpadTutorialModule;
 import com.android.systemui.unfold.SysUIUnfoldStartableModule;
 import com.android.systemui.unfold.UnfoldTransitionModule;
+import com.android.systemui.util.concurrency.DelayableExecutor;
 import com.android.systemui.util.kotlin.SysUICoroutinesModule;
 import com.android.systemui.volume.dagger.VolumeModule;
 import com.android.systemui.wallpapers.dagger.WallpaperModule;
 
+import com.google.android.systemui.smartspace.BcSmartspaceDataProvider;
+import com.google.android.systemui.smartspace.DateSmartspaceDataProvider;
+import com.google.android.systemui.smartspace.KeyguardMediaViewController;
+import com.google.android.systemui.smartspace.KeyguardZenAlarmViewController;
+import com.google.android.systemui.smartspace.WeatherSmartspaceDataProvider;
+import com.google.android.systemui.smartspace.dagger.SmartspaceGoogleModule;
+import com.google.android.systemui.smartspace.dagger.SmartspaceStartableModule;
 import com.statix.android.systemui.assist.StatixAssistManager;
 import com.statix.android.systemui.biometrics.FingerprintInteractiveToAuthProviderImpl;
 import com.statix.android.systemui.controls.controller.StatixControlsTileResourceConfigurationImpl;
@@ -107,16 +129,21 @@ import com.statix.android.systemui.power.dagger.StatixPowerModule;
 import com.statix.android.systemui.qs.dagger.QSModuleStatix;
 import com.statix.android.systemui.qs.tileimpl.QSFactoryImplStatix;
 import com.statix.android.systemui.qs.tileimpl.StatixQSModule;
+import com.statix.android.systemui.res.R;
 import com.statix.android.systemui.statusbar.KeyguardIndicationControllerStatix;
 import com.statix.android.systemui.statusbar.dagger.StatixCentralSurfacesModule;
 import com.statix.android.systemui.statusbar.dagger.StatixStartCentralSurfacesModule;
 import com.statix.android.systemui.theme.ThemeOverlayControllerStatix;
 
 import dagger.Binds;
+import dagger.BindsOptionalOf;
 import dagger.Module;
 import dagger.Provides;
 import dagger.multibindings.ClassKey;
 import dagger.multibindings.IntoMap;
+
+import kotlinx.coroutines.CoroutineDispatcher;
+import kotlinx.coroutines.CoroutineScope;
 
 import java.util.Optional;
 import java.util.Set;
@@ -181,6 +208,8 @@ import javax.inject.Provider;
             ScreenCaptureModule.class,
             ScreenDecorationsModule.class,
             ShadeModule.class,
+            SmartspaceGoogleModule.class,
+            SmartspaceStartableModule.class,
             ShortcutHelperModule.class,
             SmartRepliesInflationModule.class,
             StatixCentralSurfacesModule.class,
@@ -216,6 +245,10 @@ public abstract class SystemUIStatixModule {
     @Binds
     abstract NotificationLockscreenUserManager bindNotificationLockscreenUserManager(
             NotificationLockscreenUserManagerImpl notificationLockscreenUserManager);
+
+    @BindsOptionalOf
+    @Named(SmartspaceModule.GLANCEABLE_HUB_SMARTSPACE_DATA_PLUGIN)
+    abstract BcSmartspaceDataPlugin optionalGlanceableHubBcSmartspaceDataPlugin();
 
     @Provides
     @SysUISingleton
@@ -316,5 +349,82 @@ public abstract class SystemUIStatixModule {
     @ClassKey(SysuiStatusBarStateController.class)
     static Set<Class<? extends CoreStartable>> providesStatusBarStateControllerDeps() {
         return Set.of(CentralSurfaces.class);
+    }
+
+    @Provides
+    @SysUISingleton
+    static KeyguardZenAlarmViewController provideKeyguardZenAlarmViewController(
+            Context context,
+            @Named(SmartspaceModule.DATE_SMARTSPACE_DATA_PLUGIN) BcSmartspaceDataPlugin datePlugin,
+            ZenModeController zenModeController,
+            ZenModeInteractor zenModeInteractor,
+            AlarmManager alarmManager,
+            NextAlarmControllerImpl nextAlarmController,
+            @Main Handler handler,
+            @Application CoroutineScope applicationScope,
+            @Background CoroutineDispatcher bgDispatcher) {
+        KeyguardZenAlarmViewController controller =
+                new KeyguardZenAlarmViewController(
+                        context,
+                        datePlugin,
+                        zenModeController,
+                        zenModeInteractor,
+                        alarmManager,
+                        nextAlarmController,
+                        handler,
+                        applicationScope,
+                        bgDispatcher);
+        controller.alarmImage =
+                context.getResources().getDrawable(R.drawable.ic_access_alarms_big, null);
+        return controller;
+    }
+
+    @Provides
+    @SysUISingleton
+    static KeyguardMediaViewController provideKeyguardMediaViewController(
+            Context context,
+            NotificationMediaManager mediaManager,
+            BcSmartspaceDataPlugin plugin,
+            UserTracker userTracker,
+            @Main DelayableExecutor uiExecutor) {
+        KeyguardMediaViewController controller =
+                new KeyguardMediaViewController(
+                        context, mediaManager, plugin, userTracker, uiExecutor);
+        controller.mediaComponent = new ComponentName(context, KeyguardMediaViewController.class);
+        return controller;
+    }
+
+    @Provides
+    @SysUISingleton
+    static BcSmartspaceConfigProvider provideBcSmartspaceConfigPlugin(
+            FeatureFlags featureFlags) {
+        return new BcSmartspaceConfigProvider(featureFlags);
+    }
+
+    @Provides
+    @SysUISingleton
+    static BcSmartspaceDataPlugin provideBcSmartspaceDataPlugin() {
+        return new BcSmartspaceDataProvider();
+    }
+
+    @Provides
+    @SysUISingleton
+    @Named(SmartspaceModule.DATE_SMARTSPACE_DATA_PLUGIN)
+    static BcSmartspaceDataPlugin provideDateSmartspaceDataPlugin() {
+        return new DateSmartspaceDataProvider();
+    }
+
+    @Provides
+    @SysUISingleton
+    @Named(SmartspaceModule.GLANCEABLE_HUB_SMARTSPACE_DATA_PLUGIN)
+    static BcSmartspaceDataPlugin provideGlanceableHubBcSmartspaceDataPlugin() {
+        return new BcSmartspaceDataProvider();
+    }
+
+    @Provides
+    @SysUISingleton
+    @Named(SmartspaceModule.WEATHER_SMARTSPACE_DATA_PLUGIN)
+    static BcSmartspaceDataPlugin provideWeatherSmartspaceDataPlugin() {
+        return new WeatherSmartspaceDataProvider();
     }
 }
