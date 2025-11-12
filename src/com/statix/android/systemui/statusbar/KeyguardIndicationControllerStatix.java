@@ -155,6 +155,7 @@ public class KeyguardIndicationControllerStatix extends KeyguardIndicationContro
                 userTracker,
                 bouncerMessageInteractor,
                 indicationHelper,
+                deviceEntryBiometricSettingsInteractor,
                 keyguardInteractor,
                 biometricMessageInteractor,
                 deviceEntryFingerprintAuthInteractor,
