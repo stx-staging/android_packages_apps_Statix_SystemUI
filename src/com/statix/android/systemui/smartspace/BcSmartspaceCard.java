@@ -22,6 +22,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.android.launcher3.icons.GraphicsUtils;
 import com.android.systemui.plugins.BcSmartspaceDataPlugin;
+import com.android.systemui.plugins.FalsingManager;
 
 import com.google.android.systemui.smartspace.logging.BcSmartspaceCardLoggingInfo;
 import com.google.android.systemui.smartspace.logging.BcSmartspaceCardMetadataLoggingInfo;
@@ -99,6 +100,13 @@ public class BcSmartspaceCard extends ConstraintLayout implements SmartspaceCard
         mBaseActionIconDrawable.mIconDrawable = null;
         setTitle(null, null, false);
         setSubtitle(null, null, false);
+        if (mBaseActionIconSubtitleView == null) {
+            Log.w("BcSmartspaceCard", "No base action icon subtitle view to update");
+        } else {
+            mBaseActionIconSubtitleView.setText((CharSequence) null);
+            mBaseActionIconSubtitleView.setCompoundDrawablesRelative(null, null, null, null);
+            ContentDescriptionUtil.setFormattedContentDescription("BcSmartspaceCard", mBaseActionIconSubtitleView, null, null);
+        }
         updateIconTint();
         setOnClickListener(null);
         if (mTitleTextView != null) {
@@ -137,6 +145,7 @@ public class BcSmartspaceCard extends ConstraintLayout implements SmartspaceCard
             }
 
             Icon icon = headerAction.getIcon();
+            FalsingManager falsingManager = BcSmartSpaceUtil.sFalsingManager;
             Drawable iconDrawable =
                     icon != null
                             ? BcSmartSpaceUtil.getIconDrawableWithCustomSize(
@@ -161,6 +170,7 @@ public class BcSmartspaceCard extends ConstraintLayout implements SmartspaceCard
         }
 
         if (mBaseActionIconSubtitleView != null && baseAction != null) {
+            FalsingManager falsingManager = BcSmartSpaceUtil.sFalsingManager;
             Drawable baseIconDrawable =
                     baseAction.getIcon() != null
                             ? BcSmartSpaceUtil.getIconDrawableWithCustomSize(
@@ -173,10 +183,7 @@ public class BcSmartspaceCard extends ConstraintLayout implements SmartspaceCard
             mBaseActionIconDrawable.setIcon(baseIconDrawable);
 
             if (baseIconDrawable == null) {
-                BcSmartspaceTemplateDataUtils.updateVisibility(
-                        mBaseActionIconSubtitleView, View.INVISIBLE);
-                mBaseActionIconSubtitleView.setOnClickListener(null);
-                mBaseActionIconSubtitleView.setContentDescription(null);
+                Log.w("BcSmartspaceCard", "No base action icon subtitle view to update");
             } else {
                 mBaseActionIconSubtitleView.setText(baseAction.getSubtitle());
                 mBaseActionIconSubtitleView.setCompoundDrawablesRelative(
@@ -490,7 +497,7 @@ public class BcSmartspaceCard extends ConstraintLayout implements SmartspaceCard
     }
 
     public void updateIconTint() {
-        if (mTarget == null || mIconDrawable == null) {
+        if (mTarget == null) {
             return;
         }
         mIconDrawable.setTint(mTarget.getFeatureType() != 1 ? mIconTintColor : 0);

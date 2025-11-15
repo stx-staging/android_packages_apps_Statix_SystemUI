@@ -135,7 +135,10 @@ public abstract class BcSmartSpaceUtil {
                 action.getExtras() != null && action.getExtras().getBoolean("show_on_lockscreen");
         boolean noIntent = action.getIntent() == null && action.getPendingIntent() == null;
         BcSmartspaceDataPlugin.IntentStarter intentStarter =
-                sIntentStarter != null ? sIntentStarter : new DefaultIntentStarter(tag);
+                smartspaceEventNotifier != null ? smartspaceEventNotifier.getIntentStarter() : null;
+        if (intentStarter == null) {
+            intentStarter = new DefaultIntentStarter(tag);
+        }
         view.setOnClickListener(
                 v -> {
                     if (sFalsingManager != null && sFalsingManager.isFalseTap(1)) {

@@ -1,12 +1,12 @@
 package com.google.android.systemui.smartspace;
 
 import android.app.smartspace.SmartspaceAction;
-import android.app.smartspace.SmartspaceTarget;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
 import com.android.systemui.plugins.BcSmartspaceDataPlugin;
+import com.android.systemui.plugins.FalsingManager;
 
 import com.google.android.systemui.smartspace.logging.BcSmartspaceCardLoggingInfo;
 
@@ -28,10 +28,10 @@ public final class BcNextAlarmData {
         builder.mDisplaySurface = i;
         BcSmartspaceCardLoggingInfo bcSmartspaceCardLoggingInfo =
                 new BcSmartspaceCardLoggingInfo(builder);
-        BcSmartspaceDataPlugin.IntentStarter intentStarter = BcSmartSpaceUtil.sIntentStarter;
+        FalsingManager falsingManager intentStarter = BcSmartSpaceUtil.sFalsingManager;
         BcSmartSpaceUtil.setOnClickListener(
                 view,
-                (SmartspaceTarget) null,
+                null,
                 SHOW_ALARMS_ACTION,
                 smartspaceEventNotifier,
                 "BcNextAlarmData",

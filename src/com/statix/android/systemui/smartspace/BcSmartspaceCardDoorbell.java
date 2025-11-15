@@ -32,6 +32,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 
 import com.android.internal.util.LatencyTracker;
 import com.android.systemui.plugins.BcSmartspaceDataPlugin;
+import com.android.systemui.plugins.FalsingManager;
 
 import com.google.android.systemui.smartspace.logging.BcSmartspaceCardLoggingInfo;
 import com.statix.android.systemui.res.R;
@@ -102,6 +103,7 @@ public class BcSmartspaceCardDoorbell extends BcSmartspaceCardGenericImage {
             DisplayMetrics dm = res.getDisplayMetrics();
             float density = dm.density;
             ViewGroup.LayoutParams params = view.getLayoutParams();
+            FalsingManager falsingManager = BcSmartSpaceUtil.sFalsingManager;
             params.height = (int) (extras.getInt(key) * density);
         }
     }
@@ -112,6 +114,7 @@ public class BcSmartspaceCardDoorbell extends BcSmartspaceCardGenericImage {
             DisplayMetrics dm = res.getDisplayMetrics();
             float density = dm.density;
             ViewGroup.LayoutParams params = view.getLayoutParams();
+            FalsingManager falsingManager = BcSmartSpaceUtil.sFalsingManager;
             params.width = (int) (extras.getInt(key) * density);
         }
     }

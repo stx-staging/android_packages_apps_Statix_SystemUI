@@ -17,7 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 
 import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.ViewPager2;
@@ -56,7 +56,7 @@ public class BcSmartspaceView extends FrameLayout
     public boolean mIsAodEnabled;
     public final Set<String> mLastReceivedTargets = new ArraySet<>();
     public final Runnable mLongPressCallback;
-    public PageIndicator mPageIndicator;
+    public PagerDots mPagerDots;
     public List<SmartspaceTarget> mPendingTargets;
     public float mPreviousDozeAmount;
     public int mScrollState;
@@ -66,6 +66,9 @@ public class BcSmartspaceView extends FrameLayout
     public ViewPager2 mViewPager2;
     public final ViewPager2.OnPageChangeCallback mViewPager2OnPageChangeCallback;
     public final ViewPager.OnPageChangeListener mViewPagerOnPageChangeListener;
+
+    public final class AnonymousClass4 {
+    }
 
     public BcSmartspaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -115,7 +118,7 @@ public class BcSmartspaceView extends FrameLayout
             if (previousTarget.getBaseAction() != null) {
                 builder.setSmartspaceActionId(previousTarget.getBaseAction().getId());
             }
-            mDataProvider.notifySmartspaceEvent(builder.build());
+            mDataProvider.getEventNotifier().notifySmartspaceEvent(builder.build());
         }
         if (currentTarget == null) {
             Log.w(
@@ -128,7 +131,7 @@ public class BcSmartspaceView extends FrameLayout
             if (currentTarget.getBaseAction() != null) {
                 builder.setSmartspaceActionId(currentTarget.getBaseAction().getId());
             }
-            mDataProvider.notifySmartspaceEvent(builder.build());
+            mDataProvider.getEventNotifier().notifySmartspaceEvent(builder.build());
         }
     }
 
@@ -277,42 +280,21 @@ public class BcSmartspaceView extends FrameLayout
         int position = isRtl ? mAdapter.getCount() - selectedPage : selectedPage;
         List<SmartspaceTarget> updatedTargets =
                 isRtl ? new ArrayList<>(smartspaceTargets) : smartspaceTargets;
-        if (isRtl) {
+        if (isRtl && (mAdapter instanceof CardPagerAdapter)) {
             Collections.reverse(updatedTargets);
         }
-        mAdapter.setTargets(updatedTargets);
-        int count = mAdapter.getCount();
-        if (mPageIndicator != null) {
-            mPageIndicator.setNumPages(count, isRtl);
+        final View templateCardAtPosition = mAdapter.getTemplateCardAtPosition(selectedPage);
+        if (templateCardAtPosition == null) {
+            BcSmartspaceCard legacyCardAtPosition = mAdapter.getLegacyCardAtPosition(selectedPage);
+            BcSmartspaceRemoteViewsCard remoteViewsCardAtPosition = mAdapter.getRemoteViewsCardAtPosition(selectedPage);
+            templateCardAtPosition = legacyCardAtPosition != null ? legacyCardAtPosition : remoteViewsCardAtPosition;
         }
-        if (isRtl) {
-            int newPosition = Math.min(count - 1, count - position);
-            position = Math.max(0, newPosition);
-            if (mViewPager != null) {
-                mViewPager.setCurrentItem(position, false);
-            } else if (mViewPager2 != null) {
-                mViewPager2.setCurrentItem(position, false);
-            }
-            mPageIndicator.setPageOffset(0f, position);
+        if (mAdapter instanceof CardRecyclerViewAdapter) {
+            ((CardRecyclerViewAdapter) mAdapter).setTargets(updatedTargets); 
+        } else {
+            mAdapter.setTargets(updatedTargets);
+            setTargets(templateCardAtPosition, selectedPage, isRtl);
         }
-        for (int i = 0; i < count; i++) {
-            SmartspaceTarget target = mAdapter.getTargetAtPosition(i);
-            if (!mLastReceivedTargets.contains(target.getSmartspaceTargetId())) {
-                logSmartspaceEvent(target, i, BcSmartspaceEvent.SMARTSPACE_CARD_RECEIVED);
-                SmartspaceTargetEvent.Builder builder = new SmartspaceTargetEvent.Builder(8);
-                builder.setSmartspaceTarget(target);
-                if (target.getBaseAction() != null) {
-                    builder.setSmartspaceActionId(target.getBaseAction().getId());
-                }
-                mDataProvider.notifySmartspaceEvent(builder.build());
-            }
-        }
-        mLastReceivedTargets.clear();
-        mLastReceivedTargets.addAll(
-                mAdapter.getSmartspaceTargets().stream()
-                        .filter(t -> t instanceof SmartspaceTarget)
-                        .map(t -> ((SmartspaceTarget) t).getSmartspaceTargetId())
-                        .collect(Collectors.toList()));
     }
 
     @Override
@@ -327,7 +309,7 @@ public class BcSmartspaceView extends FrameLayout
         } else {
             Log.w("BcSmartspaceView", "Unable to attach the view pager adapter");
         }
-        mPageIndicator.setNumPages(mAdapter.getCount(), isLayoutRtl());
+        mPagerDots.setNumPages(mAdapter.getCount(), isLayoutRtl());
         if ("lockscreen".equals(mAdapter.getUiSurface())) {
             try {
                 if (mBgHandler == null) {
@@ -386,18 +368,41 @@ public class BcSmartspaceView extends FrameLayout
             mAdapter = new CardPagerAdapter(this, mConfigProvider);
         } else if (pager instanceof ViewPager2) {
             mViewPager2 = (ViewPager2) pager;
+            AnonymousClass4 anonymousClass4 = new AnonymousClass4();
+            if (!pager.mSavedItemAnimatorPresent) {
+                DefaultItemAnimator defaultItemAnimator = pager.mRecyclerView.mItemAnimator;
+                pager.mSavedItemAnimatorPresent = true;
+            }
+            pager.mRecyclerView.setItemAnimator(null);
+            PageTransformerAdapter pageTransformerAdapter = pager.mPageTransformerAdapter;
+            if (anonymousClass4 != pageTransformerAdapter.mPageTransformer) {
+                pageTransformerAdapter.mPageTransformer = anonymousClass4;
+                ScrollEventAdapter scrollEventAdapter = pager.mScrollEventAdapter;
+                scrollEventAdapter.updateScrollEventValues();
+                ScrollEventAdapter.ScrollEventValues scrollEventValues = scrollEventAdapter.mScrollValues;
+                double d = scrollEventValues.mPosition + scrollEventValues.mOffset;
+                int i = (int) d;
+                float f = (float) (d - i);
+                pager.mPageTransformerAdapter.onPageScrolled(i, f, Math.round(pager.getPageSize() * f));
+            }
             mAdapter = new CardRecyclerViewAdapter(this, mConfigProvider);
         } else {
             throw new IllegalStateException("smartspace_card_pager is an invalid view type");
         }
-        mPageIndicator = findViewById(R.id.smartspace_page_indicator);
-        int paddingStart =
-                getResources().getDimensionPixelSize(R.dimen.non_remoteviews_card_padding_start);
-        mPageIndicator.setPaddingRelative(
+        View pager2 = findViewById(R.id.smartspace_page_indicator);
+        if (pager2 instanceof PagerDots) {
+            mPagerDots = (PagerDots) indicatorView;
+        }
+        if (mPagerDots != null) {
+            int paddingStart =
+                    getResources().getDimensionPixelSize(R.dimen.non_remoteviews_card_padding_start);
+            mPagerDots.setPaddingRelative(
                 paddingStart,
-                mPageIndicator.getPaddingTop(),
-                mPageIndicator.getPaddingEnd(),
-                mPageIndicator.getPaddingBottom());
+                mPagerDots.getPaddingTop(),
+                mPagerDots.getPaddingEnd(),
+                mPagerDots.getPaddingBottom()
+            );
+        }
     }
 
     @Override
@@ -446,7 +451,7 @@ public class BcSmartspaceView extends FrameLayout
         if (mDataProvider != null) {
             SmartspaceTargetEvent.Builder builder =
                     new SmartspaceTargetEvent.Builder(isVisible ? 6 : 7);
-            mDataProvider.notifySmartspaceEvent(builder.build());
+            mDataProvider.getEventNotifier().notifySmartspaceEvent(builder.build());
         }
         if (mViewPager != null && mScrollState != 0) {
             mScrollState = 0;
@@ -506,25 +511,23 @@ public class BcSmartspaceView extends FrameLayout
             }
         }
         setAlpha(alpha);
-        if (mPageIndicator != null) {
-            mPageIndicator.setNumPages(mAdapter.getCount(), isLayoutRtl());
-            mPageIndicator.setAlpha(alpha);
-            if (mPageIndicator.getVisibility() != View.GONE) {
+        if (mPagerDots != null) {
+            mPagerDots.setNumPages(mAdapter.getCount(), isLayoutRtl());
+            mPagerDots.setAlpha(alpha);
+            if (mPagerDots.getVisibility() != View.GONE) {
                 BcSmartspaceTemplateDataUtils.updateVisibility(
-                        mPageIndicator, dozeAmount == 1f ? View.INVISIBLE : View.VISIBLE);
+                        mPagerDots, dozeAmount == 1f ? View.INVISIBLE : View.VISIBLE);
             }
         }
         mPreviousDozeAmount = dozeAmount;
         if (mAdapter.getHasDifferentTargets()
                 && mAdapter.getSmartspaceTargets() != previousTargets
                 && mAdapter.getCount() > 0) {
-            int position = isLayoutRtl() ? mAdapter.getCount() - 1 : 0;
-            if (mViewPager != null) {
-                mViewPager.setCurrentItem(position, false);
+            if (mAdapter instanceof CardRecyclerViewAdapter) {
+                setSelectedPage(0);
             } else if (mViewPager2 != null) {
-                mViewPager2.setCurrentItem(position, false);
+                setSelectedPage(isLayoutRtl() ? mAdapter.getCount() - 1 : 0);
             }
-            mPageIndicator.setPageOffset(0f, position);
         }
         int displaySurface =
                 BcSmartSpaceUtil.getLoggingDisplaySurface(
@@ -562,18 +565,14 @@ public class BcSmartspaceView extends FrameLayout
     }
 
     public void setHorizontalPaddings(int padding) {
-        if (mPageIndicator != null) {
-            mPageIndicator.setPaddingRelative(
+        if (mPagerDots != null) {
+            mPagerDots.setPaddingRelative(
                     padding,
-                    mPageIndicator.getPaddingTop(),
+                    mPagerDots.getPaddingTop(),
                     padding,
-                    mPageIndicator.getPaddingBottom());
+                    mPagerDots.getPaddingBottom());
         }
         mAdapter.setNonRemoteViewsHorizontalPadding(padding);
-    }
-
-    public void setIntentStarter(BcSmartspaceDataPlugin.IntentStarter intentStarter) {
-        BcSmartSpaceUtil.sIntentStarter = intentStarter;
     }
 
     public void setKeyguardBypassEnabled(boolean enabled) {
@@ -581,7 +580,15 @@ public class BcSmartspaceView extends FrameLayout
     }
 
     public void setMediaTarget(SmartspaceTarget target) {
-        mAdapter.setMediaTarget(target);
+        if (!(mAdapter instanceof CardRecyclerViewAdapter)) {
+            mAdapter.setMediaTarget(target);
+            return;
+        }
+        mAdapter.mediaTargets.clear();
+        if (target != null) {
+            mAdapter.mediaTargets.add(target);
+        }
+        mAdapter.updateTargetVisibility(null, true);
     }
 
     public void setOnLongClickListener(View.OnLongClickListener listener) {
@@ -594,11 +601,10 @@ public class BcSmartspaceView extends FrameLayout
 
     public void setPrimaryTextColor(int color) {
         mAdapter.setPrimaryTextColor(color);
-        mPageIndicator.mPrimaryColor = color;
-        for (int i = 0; i < mPageIndicator.getChildCount(); i++) {
-            ImageView dot = (ImageView) mPageIndicator.getChildAt(i);
-            Drawable drawable = dot.getDrawable();
-            drawable.setTint(color);
+        if (mPagerDots != null) {
+            mPagerDots.primaryColor = color;
+            mPagerDots.paint.setColor(color);
+            mPagerDots.invalidate();
         }
     }
 
@@ -612,8 +618,64 @@ public class BcSmartspaceView extends FrameLayout
         mAdapter.setScreenOn(screenOn);
     }
 
+    public void setSelectedPage(int i) {
+        if (mViewPager != null) {
+            mViewPager.setCurrentItem(i, false);
+        } else {
+            if (mViewPager2 != null) {
+                ScrollEventAdapter scrollEventAdapter = mViewPager2.mFakeDragger.mScrollEventAdapter;
+                mViewPager2.setCurrentItemInternal(i, false);
+            }
+        }
+        setSelectedPageDots(0f, i, isLayoutRtl());
+    }
+
+    public void setSelectedPageDots(float f, int i, boolean z) {
+        if (z) {
+            if (mAdapter instanceof CardRecyclerViewAdapter) {
+                i = (r4.getCount() - 1) - i;
+                if (f != 0f) {
+                    i = Math.max(i - 1, 0);
+                    f = 1f - f;
+                }
+            }
+        }
+        if (mPagerDots != null) {
+            mPagerDots.setPageOffset(f, i);
+        }
+    }
+
     public void setSplitShadeEnabled(boolean enabled) {
         mSplitShadeEnabled = enabled;
+    }
+
+    public void setTargets(View view, int i, boolean z) {
+        int count = this.mAdapter.getCount();
+        if (mPagerDots != null) {
+            mPagerDots.setNumPages(count, z);
+        }
+        if (z) {
+            if (mAdapter instanceof CardRecyclerViewAdapter) {
+                setSelectedPageDots(0.0f, i, z);
+            } else {
+                setSelectedPage(Math.max(0, Math.min(count - 1, count - (mAdapter.getCount() - i))));
+            }
+        }
+        for (int i2 = 0; i2 < count; i2++) {
+            SmartspaceTarget targetAtPosition = mAdapter.getTargetAtPosition(i2);
+            if (!mLastReceivedTargets.contains(targetAtPosition.getSmartspaceTargetId())) {
+                logSmartspaceEvent(targetAtPosition, i2, BcSmartspaceEvent.SMARTSPACE_CARD_RECEIVED);
+                SmartspaceTargetEvent.Builder builder = new SmartspaceTargetEvent.Builder(8);
+                builder.setSmartspaceTarget(targetAtPosition);
+                SmartspaceAction baseAction = targetAtPosition.getBaseAction();
+                if (baseAction != null) {
+                    builder.setSmartspaceActionId(baseAction.getId());
+                }
+                mDataProvider.getEventNotifier().notifySmartspaceEvent(builder.build());
+            }
+        }
+        mLastReceivedTargets.clear();
+        mLastReceivedTargets.addAll((Collection) mAdapter.getSmartspaceTargets().stream().map(new BcSmartspaceView$$ExternalSyntheticLambda6()).collect(Collectors.toList()));
     }
 
     public void setTimeChangedDelegate(BcSmartspaceDataPlugin.TimeChangedDelegate delegate) {
@@ -678,14 +740,17 @@ public class BcSmartspaceView extends FrameLayout
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            if (this$0.mPageIndicator != null) {
-                this$0.mPageIndicator.setPageOffset(positionOffset, position);
-            }
+            BcSmartspaceView bcSmartspaceView = BcSmartspaceView.this;
+            boolean isLayoutRtl = bcSmartspaceView.isLayoutRtl();
+            bcSmartspaceView.setSelectedPageDots(positionOffset, position, isLayoutRtl);
         }
 
         @Override
         public void onPageSelected(int position) {
-            this$0.onViewPagerPageSelected(position);
+            BcSmartspaceView bcSmartspaceView = BcSmartspaceView.this;
+            boolean isLayoutRtl = bcSmartspaceView.isLayoutRtl();
+            bcSmartspaceView.setSelectedPageDots(0f, position, isLayoutRtl);
+            this$0.onViewPagerPageSelected(bcSmartspaceView, position);
         }
     }
 
@@ -723,14 +788,16 @@ public class BcSmartspaceView extends FrameLayout
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            if (this$0.mPageIndicator != null) {
-                this$0.mPageIndicator.setPageOffset(positionOffset, position);
+            BcSmartspaceView bcSmartspaceView = BcSmartspaceView.this;
+            if (mPagerDots != null) {
+                mPagerDots.setPageOffset(positionOffset, position);
             }
+            bcSmartspaceView.getClass();
         }
 
         @Override
         public void onPageSelected(int position) {
-            this$0.onViewPagerPageSelected(position);
+            this$0.onViewPagerPageSelected(bcSmartspaceView, position);
         }
     }
 }

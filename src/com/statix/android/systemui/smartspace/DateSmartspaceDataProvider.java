@@ -1,6 +1,5 @@
 package com.google.android.systemui.smartspace;
 
-import android.app.smartspace.SmartspaceTargetEvent;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,11 +14,11 @@ import java.util.Iterator;
 import java.util.Set;
 
 public final class DateSmartspaceDataProvider implements BcSmartspaceDataPlugin {
-    public Set<View.OnAttachStateChangeListener> mAttachListeners = new HashSet<>();
-    public BcSmartspaceDataPlugin.SmartspaceEventNotifier mEventNotifier;
+    public final Set<View> mViews = new HashSet<>();
+    public final Set<View.OnAttachStateChangeListener> mAttachListeners = new HashSet<>();
+    public final EventNotifierProxy mEventNotifier = new EventNotifierProxy();
     public final View.OnAttachStateChangeListener mStateChangeListener =
             new StateChangeListener(this);
-    public Set<View> mViews = new HashSet<>();
 
     public static class StateChangeListener implements View.OnAttachStateChangeListener {
         public final DateSmartspaceDataProvider this$0;
@@ -62,6 +61,11 @@ public final class DateSmartspaceDataProvider implements BcSmartspaceDataPlugin 
     }
 
     @Override
+    public final BcSmartspaceDataPlugin.SmartspaceEventNotifier getEventNotifier() {
+        return mEventNotifier;
+    }
+
+    @Override
     public BcSmartspaceDataPlugin.SmartspaceView getLargeClockView(ViewGroup viewGroup) {
         Context context = viewGroup.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -81,15 +85,13 @@ public final class DateSmartspaceDataProvider implements BcSmartspaceDataPlugin 
     }
 
     @Override
-    public void notifySmartspaceEvent(SmartspaceTargetEvent smartspaceTargetEvent) {
-        if (mEventNotifier != null) {
-            mEventNotifier.notifySmartspaceEvent(smartspaceTargetEvent);
-        }
+    public void setEventDispatcher(BcSmartspaceDataPlugin.SmartspaceEventDispatcher smartspaceEventDispatcher) {
+        mEventNotifier.eventDispatcher = smartspaceEventDispatcher;
     }
 
     @Override
-    public void registerSmartspaceEventNotifier(
-            BcSmartspaceDataPlugin.SmartspaceEventNotifier smartspaceEventNotifier) {
-        mEventNotifier = smartspaceEventNotifier;
+    public void setIntentStarter(
+            BcSmartspaceDataPlugin.IntentStarter intentStarter) {
+        mEventNotifier.intentStarterRef = intentStarter;
     }
 }

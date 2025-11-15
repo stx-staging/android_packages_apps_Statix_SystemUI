@@ -203,11 +203,11 @@ public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
         }
         if (holder.remoteViewsCard != null) {
             if (enableCardRecycling.get()) {
-                Log.d("SsCardPagerAdapter", "[rmv] Caching RemoteViews card");
+                Log.i("SsCardPagerAdapter", "[rmv] Caching RemoteViews card");
                 recycledRemoteViewsCards.put(
                         BcSmartSpaceUtil.getFeatureType(holder.target), holder.remoteViewsCard);
             }
-            Log.d("SsCardPagerAdapter", "[rmv] Removing RemoteViews card");
+            Log.i("SsCardPagerAdapter", "[rmv] Removing RemoteViews card");
             container.removeView(holder.remoteViewsCard);
         }
         if (viewHolders.get(position) == holder) {
@@ -509,12 +509,8 @@ public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
                 return;
             }
             Log.d("SsCardPagerAdapter", "[rmv] Refreshing RemoteViews card");
-            BcSmartspaceDataPlugin.SmartspaceEventNotifier notifier =
-                    dataProvider != null
-                            ? event -> dataProvider.notifySmartspaceEvent(event)
-                            : null;
             holder.remoteViewsCard.bindData(
-                    target, notifier, loggingInfo, smartspaceTargets.size() > 1);
+                    target, dataProvider != null ? dataProvider.getEventNotifier() : null, loggingInfo, smartspaceTargets.size() > 1);
         } else if (hasValidTemplate) {
             if (holder.card == null) {
                 Log.w("SsCardPagerAdapter", "No ui-template card view can be binded");
@@ -525,11 +521,7 @@ public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
             }
             BcSmartspaceCardLoggerUtil.tryForcePrimaryFeatureTypeOrUpdateLogInfoFromTemplateData(
                     loggingInfo, target.getTemplateData());
-            BcSmartspaceDataPlugin.SmartspaceEventNotifier notifier =
-                    dataProvider != null
-                            ? event -> dataProvider.notifySmartspaceEvent(event)
-                            : null;
-            holder.card.bindData(target, notifier, loggingInfo, smartspaceTargets.size() > 1);
+            holder.card.bindData(target, dataProvider != null ? dataProvider.getEventNotifier() : null, loggingInfo, smartspaceTargets.size() > 1);
             holder.card.setPrimaryTextColor(currentTextColor);
             holder.card.setDozeAmount(dozeAmount);
         } else {
@@ -539,11 +531,7 @@ public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
             }
             BcSmartspaceCardLoggerUtil.tryForcePrimaryFeatureTypeAndInjectWeatherSubcard(
                     loggingInfo, target);
-            BcSmartspaceDataPlugin.SmartspaceEventNotifier notifier =
-                    dataProvider != null
-                            ? event -> dataProvider.notifySmartspaceEvent(event)
-                            : null;
-            holder.legacyCard.bindData(target, notifier, loggingInfo, smartspaceTargets.size() > 1);
+            holder.legacyCard.bindData(target, dataProvider != null ? dataProvider.getEventNotifier() : null, loggingInfo, smartspaceTargets.size() > 1);
             holder.legacyCard.setPrimaryTextColor(currentTextColor);
             holder.legacyCard.setDozeAmount(dozeAmount);
         }
@@ -616,6 +604,14 @@ public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
                         padding,
                         templateCard.getPaddingBottom());
             }
+        }
+        for (int i2 = 0; i2 < recycledCards.size(); i2++) {
+            BaseTemplateCard baseTemplateCard = (BaseTemplateCard) recycledCards.valueAt(i2);
+            baseTemplateCard.setPaddingRelative(num.intValue(), baseTemplateCard.getPaddingTop(), num.intValue(), baseTemplateCard.getPaddingBottom());
+        }
+        for (int i3 = 0; i3 < recycledLegacyCards.size(); i3++) {
+            BcSmartspaceCard bcSmartspaceCard = (BcSmartspaceCard) recycledLegacyCards.valueAt(i3);
+            bcSmartspaceCard.setPaddingRelative(num.intValue(), bcSmartspaceCard.getPaddingTop(), num.intValue(), bcSmartspaceCard.getPaddingBottom());
         }
     }
 
