@@ -2,6 +2,7 @@ package com.statix.android.systemui.assist
 
 import android.app.ActivityManager
 import android.app.StatusBarManager
+import android.app.contextualsearch.ContextualSearchManager
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
@@ -41,7 +42,7 @@ class StatixAssistManager
 @Inject
 constructor(
   controller: DeviceProvisionedController,
-  context: Context,
+  private val context: Context,
   assistUtils: AssistUtils,
   commandQueue: CommandQueue,
   phoneStateMonitor: PhoneStateMonitor,
@@ -90,6 +91,9 @@ constructor(
       .map { getAssistInt() }
       .stateIn(backgroundScope, started = SharingStarted.Eagerly, initialValue = getAssistInt())
 
+  private val contextualSearchManager: ContextualSearchManager =
+    context.getSystemService(Context.CONTEXTUAL_SEARCH_SERVICE) as ContextualSearchManager
+
   private val screenshotHelper = ScreenshotHelper(context)
 
   private fun getAssistInt(): Int {
@@ -120,6 +124,12 @@ constructor(
             .get()
             .launchCamera(StatusBarManager.CAMERA_LAUNCH_SOURCE_POWER_DOUBLE_TAP)
           return
+        }
+        2 -> {
+          // Invoke Contextual Search
+          contextualSearchManager.startContextualSearch(
+            ContextualSearchManager.ENTRYPOINT_SYSTEM_ACTION
+          )
         }
         else -> return super.startAssist(args)
       }
