@@ -62,7 +62,6 @@ import com.android.systemui.navigationbar.gestural.GestureModule;
 import com.android.systemui.plugins.BcSmartspaceDataPlugin;
 import com.android.systemui.plugins.qs.QSFactory;
 import com.android.systemui.qs.QSFragmentStartableModule;
-import com.android.systemui.qs.dagger.QSModule;
 import com.android.systemui.reardisplay.RearDisplayModule;
 import com.android.systemui.recents.Recents;
 import com.android.systemui.recents.RecentsImplementation;
@@ -125,6 +124,7 @@ import com.statix.android.systemui.assist.StatixAssistManager;
 import com.statix.android.systemui.biometrics.FingerprintInteractiveToAuthProviderImpl;
 import com.statix.android.systemui.controls.controller.StatixControlsTileResourceConfigurationImpl;
 import com.statix.android.systemui.power.dagger.StatixPowerModule;
+import com.statix.android.systemui.qs.dagger.QSModuleStatix;
 import com.statix.android.systemui.qs.tileimpl.QSFactoryImplStatix;
 import com.statix.android.systemui.qs.tileimpl.StatixQSModule;
 import com.statix.android.systemui.res.R;
@@ -194,7 +194,7 @@ import javax.inject.Provider;
             NearbyMediaDevicesManager.StartableModule.class,
             NoOpActivityRecognitionModule.class,
             QSFragmentStartableModule.class,
-            QSModule.class,
+            QSModuleStatix.class,
             RearDisplayModule.class,
             RecentsModule.class,
             ReferenceNotificationsModule.class,
