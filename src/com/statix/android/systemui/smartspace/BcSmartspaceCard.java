@@ -325,7 +325,7 @@ public class BcSmartspaceCard extends ConstraintLayout implements SmartspaceCard
 
     /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
     @Override // androidx.constraintlayout.widget.ConstraintLayout, android.view.ViewGroup,
-              // android.view.View
+    // android.view.View
     public final void onLayout(boolean z, int i, int i2, int i3, int i4) {
         super.onLayout(z, i, i2, i3, i4);
         if (z || this.mTouchDelegateIsDirty) {

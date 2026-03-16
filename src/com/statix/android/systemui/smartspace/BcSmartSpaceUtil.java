@@ -235,7 +235,7 @@ public abstract class BcSmartSpaceUtil {
                         Log.w(
                                 tag,
                                 "Cannot notify target interaction smartspace event: event notifier"
-                                    + " null.");
+                                        + " null.");
                     } else {
                         eventNotifier.notifySmartspaceEvent(
                                 new SmartspaceTargetEvent.Builder(
@@ -286,7 +286,7 @@ public abstract class BcSmartSpaceUtil {
                         Log.w(
                                 tag,
                                 "Cannot notify target interaction smartspace event: event notifier"
-                                    + " null.");
+                                        + " null.");
                     } else {
                         eventNotifier.notifySmartspaceEvent(
                                 new SmartspaceTargetEvent.Builder(

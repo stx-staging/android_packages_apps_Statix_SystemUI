@@ -81,7 +81,7 @@ public class IcuDateTextView extends DoubleShadowTextView {
                     Log.wtf(
                             TAG,
                             "Must set background handler when mUpdatesOnAod is set to avoid making"
-                                + " binder calls on main thread");
+                                    + " binder calls on main thread");
                     getContext()
                             .getContentResolver()
                             .registerContentObserver(
@@ -162,7 +162,7 @@ public class IcuDateTextView extends DoubleShadowTextView {
                 Log.wtf(
                         TAG,
                         "Must set background handler when mUpdatesOnAod is set to avoid making"
-                            + " binder calls on main thread");
+                                + " binder calls on main thread");
                 getContext().getContentResolver().unregisterContentObserver(mAodSettingsObserver);
             } else {
                 mBgHandler.post(

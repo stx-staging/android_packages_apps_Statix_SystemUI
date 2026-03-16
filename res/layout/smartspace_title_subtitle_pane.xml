@@ -4,6 +4,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/text_group" android:clipChildren="false" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
         <com.google.android.systemui.smartspace.DoubleShadowTextView android:id="@+id/title_text" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toTopOf="@+id/smartspace_subtitle_group" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" style="@style/EnhancedSmartspaceTextTitle" />
         <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/smartspace_subtitle_group" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/enhanced_smartspace_subtitle_margin_top" app:layout_constraintBottom_toTopOf="@+id/smartspace_extras_group" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_text">
+            <include layout="@layout/smartspace_subtitle_aqi_chip" />
             <include layout="@layout/smartspace_subtitle_text" />
             <include layout="@layout/smartspace_subtitle_supplemental" />
         </androidx.constraintlayout.widget.ConstraintLayout>
