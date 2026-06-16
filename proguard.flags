@@ -1,4 +1,11 @@
--include ../../../../frameworks/base/packages/SystemUI/proguard.flags
+# From ../../../../frameworks/base/packages/SystemUI/proguard.flags
+-include ../../../../frameworks/base/packages/SystemUI/proguard_common.flags
+
+-keep class com.android.systemui.SystemUIInitializerImpl {
+    *;
+}
+
+-keep,allowoptimization,allowaccessmodification class com.android.systemui.dagger.DaggerReferenceGlobalRootComponent** { !synthetic *; }
 
 # Custom rules
 -keep class com.statix.** { *; }

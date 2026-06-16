@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <!-- Smart replies in notifications: Whether we disable the feature unless the app targets P -->
-    <bool name="config_smart_replies_in_notifications_requires_targeting_p">false</bool>
-
     <!-- Whether or not lockscreen shortcuts can be customized -->
     <bool name="custom_lockscreen_shortcuts_enabled">true</bool>
 
@@ -15,14 +12,32 @@
     </string>
 
     <!-- The default tiles to display in QuickSettings with the new UI -->
-    <string name="quick_settings_tiles_new_default" translatable="false">
+    <string name="quick_settings_tiles_default" translatable="false">
         internet,bt,dnd,custom(com.google.android.gms/.nearby.sharing.SharingTileService),flashlight,airplane,rotation,wallet,cast,alarm,controls,screenrecord
     </string>
 
+    <!-- The default tiles to display in QuickSettings after the internet tile split-->
+    <string name="quick_settings_tiles_default_split" translatable="false">
+        wifi,bt,cell,custom(com.google.android.gms/.nearby.sharing.SharingTileService),dnd,wallet,airplane,rotation,flashlight,battery,alarm,controls,cast,screenrecord
+    </string>
+
+    <!-- The default large tiles in Quick Settings after the internet tile split -->
+    <string-array name="quick_settings_large_tiles_default_split" translatable="false">
+        <item>wifi</item>
+        <item>bt</item>
+        <item>cell</item>
+        <item>custom(com.google.android.gms/.nearby.sharing.SharingTileService)</item>
+        <item>dnd</item>
+        <item>wallet</item>
+    </string-array>
+
     <!-- Tiles native to Statix System UI. Order should match "quick_settings_tiles_default" -->
     <string name="quick_settings_tiles_stock" translatable="false">
-        internet,bt,flashlight,dnd,modes_dnd,alarm,airplane,controls,wallet,rotation,battery,cast,screenrecord,mictoggle,cameratoggle,location,hotspot,inversion,saver,dark,work,night,reverse,reduce_brightness,qr_code_scanner,onehanded,color_correction,dream,font_scaling,record_issue,hearing_devices,notes,desktopeffects,powershare,caffeine,glovemode,nfc,smartpixels,dataswitch,ambientmusicmodes
+        internet,wifi,bt,flashlight,dnd,modes_dnd,alarm,airplane,controls,wallet,rotation,battery,cast,screenrecord,mictoggle,cameratoggle,location,hotspot,inversion,saver,dark,work,night,reverse,reduce_brightness,qr_code_scanner,onehanded,color_correction,font_scaling,record_issue,hearing_devices,notes,desktopeffects,cell,powershare,caffeine,glovemode,nfc,smartpixels,dataswitch,ambientmusicmodes
     </string>
+
+    <!-- Package name of the preferred system app to perform eSOS action -->
+    <string name="config_preferredEmergencySosPackage" translatable="false">com.google.android.apps.safetyhub</string>
 
     <!-- Do not translate. Defines the slots for the right-hand side icons.  That is to say, the
          icons in the status bar that are not notifications. -->

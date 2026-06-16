@@ -80,6 +80,7 @@ android_app {
         "StatixSystemUI-core",
     ],
     use_embedded_native_libs: true,
+    enable_ksp: true,
     platform_apis: true,
     system_ext_specific: true,
     certificate: "platform",
@@ -87,6 +88,9 @@ android_app {
 
     optimize: {
         proguard_flags_files: ["proguard.flags"],
+        included_proguard_flags_files: [
+            ":sysui_proguard_common_and_kotlin",
+        ],
     },
 
     kotlincflags: ["-Xjvm-default=enable"],

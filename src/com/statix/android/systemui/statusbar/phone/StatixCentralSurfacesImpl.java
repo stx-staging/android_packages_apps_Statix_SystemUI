@@ -11,17 +11,14 @@ import android.service.dreams.IDreamManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
-import com.android.app.displaylib.PerDisplayRepository;
 import com.android.internal.logging.MetricsLogger;
 import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.ViewMediatorCallback;
-import com.android.systemui.InitController;
 import com.android.systemui.accessibility.floatingmenu.AccessibilityFloatingMenuController;
 import com.android.systemui.animation.ActivityTransitionAnimator;
 import com.android.systemui.assist.AssistManager;
-import com.android.systemui.back.domain.interactor.BackActionInteractor;
-import com.android.systemui.biometrics.AuthRippleController;
 import com.android.systemui.bouncer.domain.interactor.AlternateBouncerInteractor;
+import com.android.systemui.brightness.data.repository.BrightnessMirrorShowingRepository;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.charging.WiredChargingRippleController;
 import com.android.systemui.classifier.FalsingCollector;
@@ -33,24 +30,21 @@ import com.android.systemui.dagger.qualifiers.UiBackground;
 import com.android.systemui.demomode.DemoModeController;
 import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent;
 import com.android.systemui.emergency.EmergencyGestureModule.EmergencyGestureIntentFactory;
-import com.android.systemui.flags.FeatureFlags;
 import com.android.systemui.fragments.FragmentService;
 import com.android.systemui.keyguard.KeyguardUnlockAnimationController;
 import com.android.systemui.keyguard.KeyguardViewMediator;
 import com.android.systemui.keyguard.ScreenLifecycle;
 import com.android.systemui.keyguard.WakefulnessLifecycle;
+import com.android.systemui.log.SessionTracker;
 import com.android.systemui.media.NotificationMediaManager;
 import com.android.systemui.navigationbar.NavigationBarController;
 import com.android.systemui.notetask.NoteTaskController;
 import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.plugins.FalsingManager;
-import com.android.systemui.plugins.PluginDependencyProvider;
 import com.android.systemui.plugins.PluginManager;
 import com.android.systemui.power.domain.interactor.PowerInteractor;
 import com.android.systemui.scene.domain.interactor.WindowRootViewVisibilityInteractor;
 import com.android.systemui.settings.UserTracker;
-import com.android.systemui.settings.brightness.BrightnessSliderController;
-import com.android.systemui.settings.brightness.data.repository.BrightnessMirrorShowingRepository;
 import com.android.systemui.shade.CameraLauncher;
 import com.android.systemui.shade.GlanceableHubContainerController;
 import com.android.systemui.shade.NotificationShadeWindowViewController;
@@ -69,8 +63,6 @@ import com.android.systemui.statusbar.NotificationShadeDepthController;
 import com.android.systemui.statusbar.NotificationShadeWindowController;
 import com.android.systemui.statusbar.PulseExpansionHandler;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
-import com.android.systemui.statusbar.core.StatusBarInitializer;
-import com.android.systemui.statusbar.data.repository.StatusBarModeRepositoryStore;
 import com.android.systemui.statusbar.notification.NotificationActivityStarter;
 import com.android.systemui.statusbar.notification.NotificationLaunchAnimatorControllerProvider;
 import com.android.systemui.statusbar.notification.NotificationWakeUpCoordinator;
@@ -93,14 +85,12 @@ import com.android.systemui.statusbar.phone.ScrimController;
 import com.android.systemui.statusbar.phone.ShadeTouchableRegionManager;
 import com.android.systemui.statusbar.phone.StatusBarHideIconsForBouncerManager;
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
-import com.android.systemui.statusbar.phone.StatusBarSignalPolicy;
 import com.android.systemui.statusbar.policy.BatteryController;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.statusbar.policy.DeviceProvisionedController;
 import com.android.systemui.statusbar.policy.ExtensionController;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.statusbar.policy.UserInfoControllerImpl;
-import com.android.systemui.statusbar.window.StatusBarWindowControllerStore;
 import com.android.systemui.statusbar.window.StatusBarWindowStateController;
 import com.android.systemui.topui.TopUiController;
 import com.android.systemui.util.WallpaperController;
@@ -134,12 +124,7 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
             FragmentService fragmentService,
             LightBarController lightBarController,
             AutoHideController autoHideController,
-            StatusBarInitializer statusBarInitializer,
-            StatusBarWindowControllerStore statusBarWindowControllerStore,
-            PerDisplayRepository<SystemUIDisplaySubcomponent> perDisplaySubcomponentRepository,
-            StatusBarModeRepositoryStore statusBarModeRepository,
             KeyguardUpdateMonitor keyguardUpdateMonitor,
-            StatusBarSignalPolicy statusBarSignalPolicy,
             PulseExpansionHandler pulseExpansionHandler,
             NotificationWakeUpCoordinator notificationWakeUpCoordinator,
             KeyguardBypassController keyguardBypassController,
@@ -188,9 +173,7 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
             DozeParameters dozeParameters,
             Lazy<ScrimController> scrimController,
             Lazy<BiometricUnlockController> biometricUnlockControllerLazy,
-            AuthRippleController authRippleController,
             DozeServiceHost dozeServiceHost,
-            BackActionInteractor backActionInteractor,
             PowerManager powerManager,
             DozeScrimController dozeScrimController,
             VolumeComponent volumeComponent,
@@ -201,9 +184,7 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
             WindowRootViewVisibilityInteractor windowRootViewVisibilityInteractor,
             StatusBarKeyguardViewManager statusBarKeyguardViewManager,
             ViewMediatorCallback viewMediatorCallback,
-            InitController initController,
             @Named(TIME_TICK_HANDLER_NAME) Handler timeTickHandler,
-            PluginDependencyProvider pluginDependencyProvider,
             ExtensionController extensionController,
             UserInfoControllerImpl userInfoControllerImpl,
             PhoneStatusBarPolicy phoneStatusBarPolicy,
@@ -211,12 +192,10 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
             DemoModeController demoModeController,
             Lazy<NotificationShadeDepthController> notificationShadeDepthControllerLazy,
             ShadeTouchableRegionManager shadeTouchableRegionManager,
-            BrightnessSliderController.Factory brightnessSliderFactory,
             ScreenOffAnimationController screenOffAnimationController,
             WallpaperController wallpaperController,
             StatusBarHideIconsForBouncerManager statusBarHideIconsForBouncerManager,
             LockscreenShadeTransitionController lockscreenShadeTransitionController,
-            FeatureFlags featureFlags,
             KeyguardUnlockAnimationController keyguardUnlockAnimationController,
             @Main DelayableExecutor delayableExecutor,
             @Main MessageRouter messageRouter,
@@ -236,19 +215,15 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
             EmergencyGestureIntentFactory emergencyGestureIntentFactory,
             QuickAccessWalletController walletController,
             WindowManager windowManager,
-            WindowManagerProvider windowManagerProvider) {
+            WindowManagerProvider windowManagerProvider,
+            SessionTracker sessionTracker) {
         super(
                 context,
                 notificationsController,
                 fragmentService,
                 lightBarController,
                 autoHideController,
-                statusBarInitializer,
-                statusBarWindowControllerStore,
-                perDisplaySubcomponentRepository,
-                statusBarModeRepository,
                 keyguardUpdateMonitor,
-                statusBarSignalPolicy,
                 pulseExpansionHandler,
                 notificationWakeUpCoordinator,
                 keyguardBypassController,
@@ -294,9 +269,7 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
                 dozeParameters,
                 scrimController,
                 biometricUnlockControllerLazy,
-                authRippleController,
                 dozeServiceHost,
-                backActionInteractor,
                 powerManager,
                 dozeScrimController,
                 volumeComponent,
@@ -307,9 +280,7 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
                 windowRootViewVisibilityInteractor,
                 statusBarKeyguardViewManager,
                 viewMediatorCallback,
-                initController,
                 timeTickHandler,
-                pluginDependencyProvider,
                 extensionController,
                 userInfoControllerImpl,
                 phoneStatusBarPolicy,
@@ -317,12 +288,10 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
                 demoModeController,
                 notificationShadeDepthControllerLazy,
                 shadeTouchableRegionManager,
-                brightnessSliderFactory,
                 screenOffAnimationController,
                 wallpaperController,
                 statusBarHideIconsForBouncerManager,
                 lockscreenShadeTransitionController,
-                featureFlags,
                 keyguardUnlockAnimationController,
                 delayableExecutor,
                 messageRouter,
@@ -342,6 +311,7 @@ public class StatixCentralSurfacesImpl extends CentralSurfacesImpl {
                 emergencyGestureIntentFactory,
                 walletController,
                 windowManager,
-                windowManagerProvider);
+                windowManagerProvider,
+                sessionTracker);
     }
 }

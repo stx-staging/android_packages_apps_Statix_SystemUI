@@ -5,12 +5,14 @@
 
 package com.statix.android.systemui.dagger;
 
+import com.android.systemui.bundle.phone.PodModulePhone;
 import com.android.systemui.dagger.DependencyProvider;
 import com.android.systemui.dagger.SysUIComponent;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dagger.SystemUICoreStartableModule;
 import com.android.systemui.dagger.SystemUIModule;
 import com.android.systemui.keyguard.CustomizationProvider;
+import com.android.systemui.notifications.intelligence.rules.ui.NotificationRulesDefaultModule;
 import com.android.systemui.statusbar.NotificationInsetsModule;
 import com.android.systemui.statusbar.QsFrameTranslateModule;
 import com.android.systemui.unfold.SysUIUnfoldModule;
@@ -27,6 +29,8 @@ import dagger.Subcomponent;
 @Subcomponent(modules = {
         DependencyProvider.class,
         NotificationInsetsModule.class,
+        NotificationRulesDefaultModule.class,
+        PodModulePhone.class,
         QsFrameTranslateModule.class,
         StatixComponentBinder.class,
         SystemUIModule.class,

@@ -104,7 +104,7 @@ constructor(
     }
   }
 
-  override fun startAssist(args: Bundle) {
+  override fun startAssist(context: Context, args: Bundle) {
     val invocationType = args.getInt(AssistManager.INVOCATION_TYPE_KEY, 0)
     if (invocationType == AssistUtils.INVOCATION_TYPE_GESTURE) {
       // Check what action we should be doing.
@@ -131,10 +131,10 @@ constructor(
             ContextualSearchManager.ENTRYPOINT_SYSTEM_ACTION
           )
         }
-        else -> return super.startAssist(args)
+        else -> return super.startAssist(context, args)
       }
     }
-    return super.startAssist(args)
+    return super.startAssist(context, args)
   }
 
   companion object {

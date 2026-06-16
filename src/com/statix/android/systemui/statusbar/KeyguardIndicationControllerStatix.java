@@ -26,6 +26,7 @@ import com.android.settingslib.utils.PowerUtil;
 import com.android.systemui.biometrics.AuthController;
 import com.android.systemui.biometrics.FaceHelpMessageDeferralFactory;
 import com.android.systemui.bouncer.domain.interactor.AlternateBouncerInteractor;
+import com.android.systemui.bouncer.domain.interactor.BouncerInteractor;
 import com.android.systemui.bouncer.domain.interactor.BouncerMessageInteractor;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.dagger.SysUISingleton;
@@ -49,8 +50,7 @@ import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.user.domain.interactor.UserLogoutInteractor;
 import com.android.systemui.util.DeviceConfigProxy;
 import com.android.systemui.util.concurrency.DelayableExecutor;
-import com.android.systemui.util.time.SystemClock;
-import com.android.systemui.util.time.impl.SystemClockImpl;
+import com.android.systemui.util.time.SystemClockImpl;
 import com.android.systemui.util.wakelock.WakeLock;
 
 import com.statix.android.systemui.adaptivecharging.AdaptiveChargingManager;
@@ -80,7 +80,7 @@ public class KeyguardIndicationControllerStatix extends KeyguardIndicationContro
     private final BroadcastReceiver mBroadcastReceiver;
     private final Context mContext;
     private final DeviceConfigProxy mDeviceConfig;
-    private final SystemClock mSystemClock;
+    private final SystemClockImpl mSystemClock;
     private long mEstimatedChargeCompletion;
     private boolean mInited;
     private boolean mIsCharging;
@@ -129,11 +129,12 @@ public class KeyguardIndicationControllerStatix extends KeyguardIndicationContro
             DeviceConfigProxy deviceConfigProxy,
             KeyguardLogger keyguardLogger,
             AlternateBouncerInteractor alternateBouncerInteractor,
+            BouncerInteractor bouncerInteractor,
             AlarmManager alarmManager,
             UserTracker userTracker,
             BouncerMessageInteractor bouncerMessageInteractor,
             IndicationHelper indicationHelper,
-            SystemClock systemClock,
+            SystemClockImpl systemClock,
             DeviceEntryBiometricSettingsInteractor deviceEntryBiometricSettingsInteractor,
             KeyguardInteractor keyguardInteractor,
             BiometricMessageInteractor biometricMessageInteractor,
@@ -164,6 +165,7 @@ public class KeyguardIndicationControllerStatix extends KeyguardIndicationContro
                 faceHelpMessageDeferralFactory,
                 keyguardLogger,
                 alternateBouncerInteractor,
+                bouncerInteractor,
                 alarmManager,
                 userTracker,
                 bouncerMessageInteractor,

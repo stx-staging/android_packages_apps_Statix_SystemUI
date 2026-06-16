@@ -22,9 +22,11 @@ import com.android.systemui.assist.AssistManager;
 import com.android.systemui.battery.BatterySaverModule;
 import com.android.systemui.biometrics.FingerprintInteractiveToAuthProvider;
 import com.android.systemui.clipboardoverlay.dagger.ClipboardOverlayOverrideModule;
-import com.android.systemui.communal.posturing.dagger.NoopPosturingModule;
+import com.android.systemui.communal.posturing.dagger.PosturingModule;
+import com.android.systemui.contextualcursor.ContextualCursorModule;
 import com.android.systemui.controls.controller.ControlsTileResourceConfiguration;
 import com.android.systemui.CoreStartable;
+import com.android.systemui.cursorposition.CursorPositionModule;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent;
 import com.android.systemui.display.dagger.ReferenceSysUIDisplaySubcomponent;
@@ -38,12 +40,12 @@ import com.android.systemui.education.dagger.ContextualEducationModule;
 import com.android.systemui.emergency.EmergencyGestureModule;
 import com.android.systemui.globalactions.GlobalActionsModule;
 import com.android.systemui.inputdevice.tutorial.KeyboardTouchpadTutorialModule;
+import com.android.systemui.inputmethod.ImeSwitcherMenuModule;
 import com.android.systemui.keyboard.shortcut.ShortcutHelperModule;
 import com.android.systemui.keyguard.dagger.KeyguardModule;
-import com.android.systemui.keyguard.ui.composable.blueprint.DefaultBlueprintModule;
 import com.android.systemui.keyguard.ui.view.layout.blueprints.KeyguardBlueprintModule;
 import com.android.systemui.keyguard.ui.view.layout.sections.KeyguardSectionsModule;
-import com.android.systemui.lowlight.dagger.NoopAmbientLightModeMonitorModule;
+import com.android.systemui.lowlight.dagger.ScreenAwareLightModeMonitorModule;
 import com.android.systemui.media.dagger.MediaModule;
 import com.android.systemui.media.muteawait.MediaMuteAwaitConnectionCli;
 import com.android.systemui.media.nearby.NearbyMediaDevicesManager;
@@ -57,14 +59,13 @@ import com.android.systemui.reardisplay.RearDisplayModule;
 import com.android.systemui.recents.Recents;
 import com.android.systemui.recents.RecentsImplementation;
 import com.android.systemui.recents.RecentsModule;
-import com.android.systemui.rotationlock.DeviceStateAutoRotateModule;
 import com.android.systemui.rotationlock.RotationLockModule;
 import com.android.systemui.rotationlock.RotationLockNewModule;
 import com.android.systemui.scene.SceneContainerFrameworkModule;
+import com.android.systemui.screencapture.common.ScreenCaptureModule;
 import com.android.systemui.screenshot.ReferenceScreenshotModule;
 import com.android.systemui.settings.MultiUserUtilsModule;
 import com.android.systemui.settings.UserTracker;
-import com.android.systemui.settings.brightness.dagger.BrightnessSliderModule;
 import com.android.systemui.shade.NotificationShadeWindowControllerImpl;
 import com.android.systemui.shade.ShadeModule;
 import com.android.systemui.startable.Dependencies;
@@ -80,7 +81,6 @@ import com.android.systemui.statusbar.phone.CentralSurfaces;
 import com.android.systemui.statusbar.phone.DozeServiceHost;
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
 import com.android.systemui.statusbar.phone.dagger.StatusBarPhoneModule;
-import com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragmentStartableModule;
 import com.android.systemui.statusbar.policy.AospPolicyModule;
 import com.android.systemui.statusbar.policy.DeviceProvisionedController;
 import com.android.systemui.statusbar.policy.DeviceProvisionedControllerImpl;
@@ -88,6 +88,7 @@ import com.android.systemui.statusbar.policy.IndividualSensorPrivacyController;
 import com.android.systemui.statusbar.policy.IndividualSensorPrivacyControllerImpl;
 import com.android.systemui.statusbar.policy.SensorPrivacyController;
 import com.android.systemui.statusbar.policy.SensorPrivacyControllerImpl;
+import com.android.systemui.statusbar.policy.dagger.SmartRepliesInflationModule;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
 import com.android.systemui.theme.ThemeOverlayController;
 import com.android.systemui.toast.ToastModule;
@@ -145,13 +146,12 @@ import javax.inject.Provider;
             ActionCornerModule.class,
             AospPolicyModule.class,
             BatterySaverModule.class,
-            BrightnessSliderModule.class,
             ClipboardOverlayOverrideModule.class,
-            CollapsedStatusBarFragmentStartableModule.class,
             ConnectingDisplayViewModel.StartableModule.class,
+            ImeSwitcherMenuModule.class,
+            ContextualCursorModule.class,
             ContextualEducationModule.class,
-            DefaultBlueprintModule.class,
-            DeviceStateAutoRotateModule.class,
+            CursorPositionModule.class,
             DisplayPhoneModule.class,
             EmergencyGestureModule.class,
             GestureModule.class,
@@ -172,15 +172,17 @@ import javax.inject.Provider;
             RearDisplayModule.class,
             RecentsModule.class,
             ReferenceNotificationsModule.class,
-            NoopPosturingModule.class,
-            NoopAmbientLightModeMonitorModule.class,
+            PosturingModule.class,
             ReferenceScreenshotModule.class,
             RotationLockModule.class,
             RotationLockNewModule.class,
             SceneContainerFrameworkModule.class,
+            ScreenAwareLightModeMonitorModule.class,
+            ScreenCaptureModule.class,
             ScreenDecorationsModule.class,
             ShadeModule.class,
             ShortcutHelperModule.class,
+            SmartRepliesInflationModule.class,
             StatixCentralSurfacesModule.class,
             StatixStartCentralSurfacesModule.class,
             StatixPowerModule.class,
@@ -239,12 +241,13 @@ public abstract class SystemUIStatixModule {
 
     @Provides
     @SysUISingleton
-    static Optional<MinModeManager> bindMinModeManager(Provider<MinModeManagerImpl> minModeManager) {
-      if (Flags.enableMinmode()) {
-        return Optional.of(minModeManager.get());
-      } else {
-        return Optional.empty();
-      }
+    static Optional<MinModeManager> bindMinModeManager(
+            Provider<MinModeManagerImpl> minModeManager) {
+        if (Flags.enableMinmode()) {
+            return Optional.of(minModeManager.get());
+        } else {
+            return Optional.empty();
+        }
     }
 
     @SysUISingleton
@@ -282,7 +285,7 @@ public abstract class SystemUIStatixModule {
     @Binds
     abstract DozeHost provideDozeHost(DozeServiceHost dozeServiceHost);
 
-    /** */
+    /**  */
     @Binds
     @SysUISingleton
     public abstract QSFactory bindQSFactory(QSFactoryImplStatix qsFactoryImpl);
@@ -306,7 +309,7 @@ public abstract class SystemUIStatixModule {
     @Binds
     abstract AssistManager bindAssistManager(StatixAssistManager assistManager);
 
-    /** */
+    /**  */
     @Provides
     @IntoMap
     @Dependencies
