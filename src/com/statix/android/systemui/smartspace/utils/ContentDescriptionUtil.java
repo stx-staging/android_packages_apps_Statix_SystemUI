@@ -24,7 +24,7 @@ public abstract class ContentDescriptionUtil {
                 str,
                 String.format(
                         "setFormattedContentDescription: text=%s, iconDescription=%s,"
-                            + " contentDescription=%s",
+                                + " contentDescription=%s",
                         Arrays.copyOf(new Object[] {charSequence, charSequence2, string}, 3)));
         view.setContentDescription(string);
     }

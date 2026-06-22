@@ -86,6 +86,7 @@ import com.android.systemui.statusbar.NotificationLockscreenUserManager;
 import com.android.systemui.statusbar.NotificationLockscreenUserManagerImpl;
 import com.android.systemui.statusbar.NotificationShadeWindowController;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
+import com.android.systemui.statusbar.lockscreen.LockscreenSmartspaceController;
 import com.android.systemui.statusbar.notification.dagger.ReferenceNotificationsModule;
 import com.android.systemui.statusbar.notification.headsup.HeadsUpModule;
 import com.android.systemui.statusbar.phone.CentralSurfaces;
@@ -121,7 +122,6 @@ import com.google.android.systemui.smartspace.KeyguardMediaViewController;
 import com.google.android.systemui.smartspace.KeyguardZenAlarmViewController;
 import com.google.android.systemui.smartspace.WeatherSmartspaceDataProvider;
 import com.google.android.systemui.smartspace.dagger.SmartspaceGoogleModule;
-import com.google.android.systemui.smartspace.dagger.SmartspaceStartableModule;
 import com.statix.android.systemui.assist.StatixAssistManager;
 import com.statix.android.systemui.biometrics.FingerprintInteractiveToAuthProviderImpl;
 import com.statix.android.systemui.controls.controller.StatixControlsTileResourceConfigurationImpl;
@@ -209,7 +209,6 @@ import javax.inject.Provider;
             ScreenDecorationsModule.class,
             ShadeModule.class,
             SmartspaceGoogleModule.class,
-            SmartspaceStartableModule.class,
             ShortcutHelperModule.class,
             SmartRepliesInflationModule.class,
             StatixCentralSurfacesModule.class,
@@ -384,12 +383,12 @@ public abstract class SystemUIStatixModule {
     static KeyguardMediaViewController provideKeyguardMediaViewController(
             Context context,
             NotificationMediaManager mediaManager,
-            BcSmartspaceDataPlugin plugin,
+            LockscreenSmartspaceController smartspaceController,
             UserTracker userTracker,
             @Main DelayableExecutor uiExecutor) {
         KeyguardMediaViewController controller =
                 new KeyguardMediaViewController(
-                        context, mediaManager, plugin, userTracker, uiExecutor);
+                        context, mediaManager, smartspaceController, userTracker, uiExecutor);
         controller.mediaComponent = new ComponentName(context, KeyguardMediaViewController.class);
         return controller;
     }
@@ -412,6 +411,20 @@ public abstract class SystemUIStatixModule {
     @Named(SmartspaceModule.DATE_SMARTSPACE_DATA_PLUGIN)
     static BcSmartspaceDataPlugin provideDateSmartspaceDataPlugin() {
         return new DateSmartspaceDataProvider();
+    }
+
+    @Provides
+    @SysUISingleton
+    @Named(SmartspaceModule.DREAM_SMARTSPACE_DATA_PLUGIN)
+    static BcSmartspaceDataPlugin provideDreamBcSmartspaceDataPlugin() {
+        return new BcSmartspaceDataProvider();
+    }
+
+    @Provides
+    @SysUISingleton
+    @Named(SmartspaceModule.DREAM_WEATHER_SMARTSPACE_DATA_PLUGIN)
+    static BcSmartspaceDataPlugin provideDreamWeatherSmartspaceDataPlugin() {
+        return new WeatherSmartspaceDataProvider();
     }
 
     @Provides

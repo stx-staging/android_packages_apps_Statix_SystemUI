@@ -17,6 +17,7 @@
 package com.statix.android.systemui.dagger
 
 import com.android.systemui.CoreStartable
+import com.google.android.systemui.smartspace.KeyguardSmartspaceStartable
 import com.statix.android.systemui.smartpixels.SmartPixelsReceiver
 import dagger.Binds
 import dagger.Module
@@ -31,4 +32,10 @@ abstract class SystemUIStatixCoreStartableModule {
     @IntoMap
     @ClassKey(SmartPixelsReceiver::class)
     abstract fun bindSmartPixelsReceiver(sysui: SmartPixelsReceiver): CoreStartable
+
+    /** Inject into KeyguardSmartspaceStartable. */
+    @Binds
+    @IntoMap
+    @ClassKey(KeyguardSmartspaceStartable::class)
+    abstract fun bindKeyguardSmartspaceStartable(impl: KeyguardSmartspaceStartable): CoreStartable
 }
